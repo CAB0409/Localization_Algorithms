@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/tdoa.dir/lib/main.cpp.o  -o tdoa  -L/home/chris/software/2018matlab/bin/glnxa64 -rdynamic -larmadillo -lmex -Wl,-rpath,/home/chris/software/2018matlab/bin/glnxa64 

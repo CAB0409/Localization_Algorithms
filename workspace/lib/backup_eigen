@@ -1,0 +1,82 @@
+#include <iostream>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <unsupported/Eigen/MatrixFunctions>//pow matrix
+
+using namespace Eigen;
+
+template <typename Derived>
+void print_size(const EigenBase<Derived>& b)
+{
+  std::cout << "size (rows, cols): " << b.size() << " (" << b.rows()
+            << ", " << b.cols() << ")" << std::endl;
+}
+
+template <typename Derived>
+void print_contents(const MatrixBase<Derived>& a)
+{
+    std::cout << "\n ------------------------------- \n";
+    IOFormat CommaInitFmt(StreamPrecision, DontAlignCols, ", ", ", ", "", "", " Contents: ", ";");
+    std::cout << a.format(CommaInitFmt) << "\n ------------------------------- \n";
+}
+/*
+template <typename Derived>
+void print_contents(const VectorBase<Derived>& a)
+{
+    std::cout << "\n ------------------------------- \n";
+    IOFormat CommaInitFmt(StreamPrecision, DontAlignCols, ", ", ", ", "", "", " Contents: ", ";");
+    std::cout << a.format(CommaInitFmt) << "\n ------------------------------- \n";
+}*/
+
+
+int main()
+{
+    Vector3f v;
+    print_size(v);
+    // v.asDiagonal() returns a 3x3 diagonal matrix pseudo-expression
+    print_size(v.asDiagonal());
+
+    int L = 10e3; //Number of ensemble runs
+
+    MatrixXf u(2,1); //Source position
+    u(0) = -50; u(1) = 250; //fill Vector
+
+    MatrixXf S(2,10); //2 x 10 matrix.  Ints only
+    S << 0,-5,4,-2,7,-7,2,-4,3,1, //Better way to fill matix
+         0, 8,6, 4,3, 5,5, 2,3,8;
+
+    int M = S.cols(); // Number of sensors
+    int N = S.rows(); //Dimension of localization
+
+    //sqrt(sum((uo*ones(1,M)-S).^2))' in matlab
+    MatrixXf ones_mat = MatrixXf::Ones(1,M);
+    MatrixXf mat_manip = u*ones_mat-S;    
+    MatrixXf mat_pow = mat_manip.array().pow(2);//array function used for element wise power
+    MatrixXf mat_sum = mat_pow.colwise().sum();//Take sum of values in each column of matrix
+    MatrixXf mat_sqrt = mat_sum.cwiseSqrt(); //Take sqrt of each element in matrix
+    MatrixXf ro = mat_sqrt.transpose(); //Take the transpose of matrix
+
+    //convert matrix to vector stored column by column
+    //To get a row by row vector take the tranpose before map
+    VectorXf ro_arr(Map<VectorXf>(ro.data(), ro.cols()*ro.rows()));
+
+    //rdo = ro(2:end)-ro(1);
+    // ro_arr.segment(2, 10);
+    VectorXf sub_mat(8);
+    //TODO need to figure out how to pull submatrix
+    sub_mat << 246.148329265100, 249.903981560919, 250.639182890465, 253.491617218400,
+    248.744849192903, 250.457581238820, 252.230053720805, 252.622247634685;
+
+    VectorXf rdo = sub_mat - VectorXf::Ones(8) * ro_arr(1);// subtract scalar from vector
+
+
+    //R = (eye(M-1)+ones(M-1))/2;             % covariance structure of TDOA
+
+    //NsePwrVecdB=-60:4:-24; 
+
+
+    // print_contents(do);
+
+    return 0;
+}
